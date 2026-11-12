@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Meta 2029 — Projeto USP/UFSCar São Carlos</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <img src="icon.svg" alt="Meta 2029" class="brand-icon" />
+        <div>
+          <div class="brand-title">Meta 2029 • BCC</div>
+          <div class="brand-subtitle">USP / UFSCar São Carlos</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="installPwaBtn" class="btn btn-primary btn-sm" style="display:none;">📲 Instalar App</button>
+        <select id="monthSelect" class="month-select" aria-label="Selecionar mês"></select>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ABA 1: PAINEL (MODO BOLSO & METAS) -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <div class="phase-banner">
+        <div>
+          <div class="phase-tag" id="currentMonthTitle">Resumo do Mês</div>
+          <div class="phase-name" id="currentPhaseName">Fase 0 — Fechamento 2026</div>
+        </div>
+        <div class="va-pill">🛒 VA R$ 660,00 Blindado (Mercado)</div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Termômetro de Gasolina / Lazer -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">
+            <span>⛽ Livre p/ Gasolina & Lazer</span>
+            <span class="badge badge-emerald" id="marginPctLabel">0% usado</span>
+          </div>
+          <div class="metric-value emerald" id="marginRemainingValue">R$ 219,49</div>
+          <div class="metric-sub" id="marginSubtext">Dentro da margem mensal planejada</div>
+          <div class="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" id="marginProgressFill" style="width:0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aporte do Mês (Conta Invisível) -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">
+            <span>🏦 Aporte da Mudança no Mês</span>
+            <span class="badge badge-blue">Tesouro Selic / CDI</span>
+          </div>
+          <div class="metric-value blue" id="monthTotalAporte">R$ 0,00</div>
+          <div class="metric-sub" id="monthAporteSub">Salário + Extras/Freelas do mês</div>
+          <div style="margin-top:12px;">
+            <a href="#" target="_blank" rel="noopener" class="btn btn-outline btn-sm sheets-link">📊 Ver na Planilha Google Sheets</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progresso das Metas Jan/2029 -->
+      <div class="card">
+        <div class="card-title">
+          <span>🎯 Projeção Final em Jan/2029 (Com Juros ~0,85%/mês)</span>
+          <span class="badge badge-emerald" id="monthsGuaranteedBadge">19.8 meses garantidos</span>
+        </div>
+        <div class="metric-value emerald" id="finalProjectedBalance">R$ 29.672,59</div>
+        <div class="metric-sub">Já descontando os R$ 200/mês de ajuda para sua mãe em 2027 e 2028 (R$ 4.800 total)</div>
+
+        <div class="progress-wrap">
+          <div class="progress-header">
+            <span>Meta 1: República São Carlos + Mudança (1º Ano)</span>
+            <span id="goal1Pct">118% (R$ 25.000)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="goal1Fill" style="width:100%;"></div>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-header">
+            <span>Meta 2: Kitnet Individual (Transição 2º Ano)</span>
+            <span id="goal2Pct">85% (R$ 35.000)</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill blue" id="goal2Fill" style="width:85%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raio-X das Contas do Mês Selecionado -->
+      <div class="card">
+        <div class="card-title">
+          <span>📋 Raio-X das Contas Fixas e Parcelas do Mês</span>
+        </div>
+        <div class="breakdown-list" id="monthBreakdown"></div>
+      </div>
+    </section>
+
+    <!-- ABA 2: LANÇAR GASTOS & SIMULADOR DE CARTÃO -->
+    <section id="tab-expenses" class="tab-panel">
+      <div class="card">
+        <div class="card-title">
+          <span>➕ Lançar Gasto Variável no Mês</span>
+          <span class="badge badge-amber">Abate da Margem</span>
+        </div>
+        <form id="expenseForm">
+          <div class="grid-2" style="margin-bottom:0;">
+            <div class="form-group">
+              <label class="form-label" for="expenseCategory">Categoria</label>
+              <select id="expenseCategory" class="form-control">
+                <option value="Gasolina / Óleo Moto">⛽ Gasolina / Óleo Moto</option>
+                <option value="Lazer / Fim de Semana">🍔 Lazer / Fim de Semana</option>
+                <option value="Manutenção / Imprevisto">🔧 Manutenção / Imprevisto</option>
+                <option value="Material de Estudo">📚 Material de Estudo / Vestibular</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="expenseAmount">Valor (R$)</label>
+              <input type="number" id="expenseAmount" class="form-control" step="0.01" min="0.01" placeholder="Ex: 45.00" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="expenseDesc">Descrição Rápida</label>
+            <input type="text" id="expenseDesc" class="form-control" placeholder="Ex: Abastecimento semana 1" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Salvar Gasto no Mês</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🧾 Gastos Variáveis Registrados Neste Mês</span>
+        </div>
+        <div class="breakdown-list" id="expensesList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🛡️ Simulador Anti-Gargalo (Antes de Parcelar no Cartão)</span>
+        </div>
+        <p class="metric-sub" style="margin-bottom:12px;">
+          Teste aqui antes de fazer qualquer compra parcelada para garantir que a fatura não sabote seu aporte do mês:
+        </p>
+        <form id="simForm">
+          <div class="grid-2" style="margin-bottom:0;">
+            <div class="form-group">
+              <label class="form-label" for="simTotal">Valor Total da Compra (R$)</label>
+              <input type="number" id="simTotal" class="form-control" step="0.01" min="1" placeholder="Ex: 400.00" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="simParcels">Nº de Parcelas</label>
+              <input type="number" id="simParcels" class="form-control" min="1" max="24" value="4" required />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-secondary">Simular Impacto no Orçamento</button>
+        </form>
+        <div id="simResult"></div>
+      </div>
+    </section>
+
+    <!-- ABA 3: FREELANCES DE SÁBADO & CONTA INVISÍVEL -->
+    <section id="tab-freelas" class="tab-panel">
+      <div class="card">
+        <div class="card-title">
+          <span>⚡ Registrar Pix de Freelance / Extra CLT</span>
+          <span class="badge badge-emerald">Regra da Conta Invisível</span>
+        </div>
+        <form id="extraForm">
+          <div class="grid-2" style="margin-bottom:0;">
+            <div class="form-group">
+              <label class="form-label" for="extraMonthKey">Mês de Entrada</label>
+              <select id="extraMonthKey" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="extraCategory">Origem</label>
+              <select id="extraCategory" class="form-control">
+                <option value="Freelance (Hardware & Suporte)">🖥️ Freelance (Hardware & Suporte)</option>
+                <option value="Freelance (Python & Dados)">🐍 Freelance (Python & Dados)</option>
+                <option value="Freelance (Web / Landing Page)">🌐 Freelance (Web / Landing Page)</option>
+                <option value="Freelance (Redes & Escritório)">📡 Freelance (Redes & Escritório)</option>
+                <option value="Extra CLT (13º / Férias / Bônus)">💼 Extra CLT (13º / Férias / Bônus)</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-bottom:0;">
+            <div class="form-group">
+              <label class="form-label" for="extraDesc">Cliente / Serviço Entregue</label>
+              <input type="text" id="extraDesc" class="form-control" placeholder="Ex: Formatação + SSD Clínica Odonto" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="extraAmount">Valor Líquido (R$)</label>
+              <input type="number" id="extraAmount" class="form-control" step="0.01" min="1" placeholder="Ex: 220.00" required />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">💰 Somar na Reserva & Sincronizar Planilha</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🧰 Cardápio de Sábado (Escopo Fechado + Script WhatsApp)</span>
+          <span class="badge badge-blue">Sábado 08h30–13h30</span>
+        </div>
+        <p class="metric-sub" style="margin-bottom:12px;">
+          Clique em <strong>Copiar Abordagem WhatsApp</strong> no horário de almoço (12h–13h) para prospectar clientes ou clique em <strong>Registrar Pix</strong> ao concluir o serviço:
+        </p>
+        <div id="serviceMenuContainer"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📈 Histórico de Extras CLT & Freelances na Reserva</span>
+        </div>
+        <div class="breakdown-list" id="extrasList"></div>
+      </div>
+    </section>
+
+    <!-- ABA 4: PLANILHA 26 MESES & GOOGLE SHEETS -->
+    <section id="tab-sheet" class="tab-panel">
+      <div class="card">
+        <div class="card-title">
+          <span>☁️ Integração Direta com Sua Planilha Google Sheets</span>
+          <span class="badge badge-emerald">Conectado</span>
+        </div>
+        <p class="metric-sub" style="margin-bottom:12px;">
+          Sua planilha oficial com as 4 abas (<code>Projecao_2026_2029</code>, <code>Cartoes_e_Parcelas</code>, <code>Freelances_e_Extras</code> e <code>Painel_de_Metas</code>) já está salva na sua conta Google:
+        </p>
+        <a href="#" target="_blank" rel="noopener" class="btn btn-primary sheets-link">
+          🚀 Abrir Planilha Oficial no Google Sheets
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📊 Tabela Completa dos 26 Meses (Nov/2026 a Dez/2028)</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Mês/Ano</th>
+                <th>Despesas</th>
+                <th>Aporte Salário</th>
+                <th>Freelas/Extras</th>
+                <th>Aporte Total</th>
+                <th>Juros (~0,85%)</th>
+                <th>Saldo Acumulado</th>
+              </tr>
+            </thead>
+            <tbody id="projectionTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Barra de Navegação Inferior (Estilo App Android) -->
+  <nav class="bottom-nav" aria-label="Navegação principal">
+    <button class="nav-btn active" data-target="tab-dashboard">
+      <span class="nav-icon">📊</span>
+      <span>Painel</span>
+    </button>
+    <button class="nav-btn" data-target="tab-expenses">
+      <span class="nav-icon">⛽</span>
+      <span>Gastos</span>
+    </button>
+    <button class="nav-btn" data-target="tab-freelas">
+      <span class="nav-icon">⚡</span>
+      <span>Freelas</span>
+    </button>
+    <button class="nav-btn" data-target="tab-sheet">
+      <span class="nav-icon">📑</span>
+      <span>26 Meses</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
